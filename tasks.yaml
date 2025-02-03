@@ -1,0 +1,36 @@
+tasks:
+  install-hooks:
+    commands:
+      - command: git config --local core.hooksPath .githooks
+    description: Install git hooks
+  run:
+    commands:
+      - command: cargo r
+    description: Run the project
+  fmt:
+    commands:
+      - command: cargo fmt --all
+    description: Format the project
+  lint:
+    commands:
+      - command: cargo clippy --all-features --all-targets --tests --benches -- -Dclippy::all
+    description: Lint check the project
+  check:
+    commands:
+      - command: cargo c
+    description: Check the project
+  build:
+    commands:
+      - command: cargo b
+    description: Build the project
+    depends_on:
+      - name: check
+  build-in-container:
+    commands:
+      - container_command:
+          - cargo
+          - c
+        image: docker.io/library/rust:latest
+    description: Build the project in a container
+    depends_on:
+      - name: check
