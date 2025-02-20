@@ -1,5 +1,5 @@
 [general]
-rpc_endpoint = "http://localhost:8545"
+rpc_endpoint = "https://eclipse.lgns.net/"
 
 [account.teth]
 address = "GU7NS9xCwgNPiAdJ69iusFrRfawjDDPjeMBovhV1d4kn"

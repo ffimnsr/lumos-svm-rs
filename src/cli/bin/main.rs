@@ -1,5 +1,6 @@
 use cli_entry::CliEntry;
 
+mod analyze;
 mod cli_entry;
 
 /// Main entry point

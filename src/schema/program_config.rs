@@ -1,17 +1,29 @@
 use serde::Deserialize;
 
-use crate::{lumos_context::LumosContext, utils::clone_program};
+use crate::lumos_context::LumosContext;
+use crate::traits::Pull;
+use crate::utils::clone_program;
 
 /// The program configuration definition.
 #[derive(Debug, Deserialize)]
 pub struct ProgramConfig {
   /// The public key address of the program.
   pub address: String,
+
+  /// Set the authority of the program for upgradability.
+  pub authority: Option<String>,
+
+  /// Check if the program should be updated.
+  pub update: Option<bool>,
 }
 
-impl ProgramConfig {
-  pub fn pull(&self, context: &LumosContext) -> anyhow::Result<()> {
-    log::trace!("Pulling program: {}", self.address);
-    clone_program(context, &self.address)
+impl Pull for ProgramConfig {
+  fn pull(&self, context: &LumosContext) -> anyhow::Result<()> {
+    let update = self.update.unwrap_or(false);
+    clone_program(context, &self.address, update)
+  }
+
+  fn address(&self) -> &str {
+    &self.address
   }
 }

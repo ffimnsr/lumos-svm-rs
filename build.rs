@@ -15,5 +15,5 @@ fn set_git_revision_hash() {
         return;
     }
 
-    println!("cargo:rustc-env=MK_BUILD_GIT_HASH={}", rev);
+    println!("cargo:rustc-env=LUMOS_SVM_BUILD_GIT_HASH={}", rev);
 }

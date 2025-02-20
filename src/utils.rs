@@ -5,28 +5,39 @@ use std::io::{
   BufReader,
 };
 use std::path::Path;
-use std::process::Command;
+use std::process::{
+  Command,
+  Stdio,
+};
 use which::which;
 
 use crate::file::ToUtf8;
 use crate::lumos_context::LumosContext;
+use crate::traits::Pull as _;
 
-pub fn clone_account(context: &LumosContext, address: &str) -> anyhow::Result<()> {
+pub fn clone_account(context: &LumosContext, address: &str, update: bool) -> anyhow::Result<()> {
   let solana_cmd = which("solana").with_context(|| "Failed to find solana command")?;
 
   let stdout = get_tty_output!(context.verbose);
-  let stderr = get_tty_output!(context.verbose);
+  let stderr = Stdio::piped();
 
   let cache_dir: &str = &context.account_cache_dir()?;
   let cache_dir = Path::new(cache_dir);
+
+  // Create the cache directory if it doesn't exist.
   if !cache_dir.exists() {
     fs::create_dir_all(cache_dir)?;
   }
 
   let out_filename: &str = &format!("{address}.json");
   let out_file = cache_dir.join(out_filename);
-  let out_file: &str = out_file.to_utf8()?;
 
+  // If the file already exists and we're not updating, then return early.
+  if out_file.exists() && !update {
+    return Ok(());
+  }
+
+  let out_file: &str = out_file.to_utf8()?;
   let rpc_endpoint: &str = &context.rpc_endpoint();
   let mut cmd = Command::new(solana_cmd);
   cmd
@@ -43,10 +54,11 @@ pub fn clone_account(context: &LumosContext, address: &str) -> anyhow::Result<()
 
   let mut cmd = cmd.spawn()?;
 
-  // if context.verbose {
-  //   handle_tty_output!(cmd.stdout, context);
-  //   handle_tty_output!(cmd.stderr, context);
-  // }
+  if context.verbose {
+    handle_tty_output!(cmd.stdout, context);
+  }
+
+  handle_tty_output!(cmd.stderr, context);
 
   let status = cmd.wait()?;
   if !status.success() {
@@ -56,22 +68,29 @@ pub fn clone_account(context: &LumosContext, address: &str) -> anyhow::Result<()
   Ok(())
 }
 
-pub fn clone_program(context: &LumosContext, address: &str) -> anyhow::Result<()> {
+pub fn clone_program(context: &LumosContext, address: &str, update: bool) -> anyhow::Result<()> {
   let solana_cmd = which("solana").with_context(|| "Failed to find solana command")?;
 
   let stdout = get_tty_output!(context.verbose);
-  let stderr = get_tty_output!(context.verbose);
+  let stderr = Stdio::piped();
 
   let cache_dir: &str = &context.program_cache_dir()?;
   let cache_dir = Path::new(cache_dir);
+
+  // Create the cache directory if it doesn't exist.
   if !cache_dir.exists() {
     fs::create_dir_all(cache_dir)?;
   }
 
   let out_filename: &str = &format!("{address}.so");
   let out_file = cache_dir.join(out_filename);
-  let out_file: &str = out_file.to_utf8()?;
 
+  // If the file already exists and we're not updating, then return early.
+  if out_file.exists() && !update {
+    return Ok(());
+  }
+
+  let out_file: &str = out_file.to_utf8()?;
   let rpc_endpoint: &str = &context.rpc_endpoint();
   let mut cmd = Command::new(solana_cmd);
   cmd
@@ -86,10 +105,11 @@ pub fn clone_program(context: &LumosContext, address: &str) -> anyhow::Result<()
 
   let mut cmd = cmd.spawn()?;
 
-  // if context.verbose {
-  //   handle_tty_output!(cmd.stdout, context);
-  //   handle_tty_output!(cmd.stderr, context);
-  // }
+  if context.verbose {
+    handle_tty_output!(cmd.stdout, context);
+  }
+
+  handle_tty_output!(cmd.stderr, context);
 
   let status = cmd.wait()?;
   if !status.success() {
@@ -99,8 +119,98 @@ pub fn clone_program(context: &LumosContext, address: &str) -> anyhow::Result<()
   Ok(())
 }
 
+pub fn validator(context: &LumosContext, reset: bool) -> anyhow::Result<()> {
+  let solana_test_validator_cmd =
+    which("solana-test-validator").with_context(|| "Failed to find solana-test-validator command")?;
+
+  let stdout = get_tty_output!(context.verbose);
+  let stderr = get_tty_output!(context.verbose);
+
+  let rpc_endpoint: &str = &context.rpc_endpoint();
+  let ledger_dir: &str = &context
+    .config
+    .general
+    .ledger_dir
+    .clone()
+    .unwrap_or(".lumos-ledger".into());
+  let mut cmd = Command::new(solana_test_validator_cmd);
+  cmd
+    .stdout(stdout)
+    .stderr(stderr)
+    .arg("--url")
+    .arg(rpc_endpoint)
+    .arg("--ledger")
+    .arg(ledger_dir);
+
+  // Process the accounts
+  let account_cache_dir: &str = &context.account_cache_dir()?;
+  let account_cache_dir = Path::new(account_cache_dir);
+  let account_cache_dir: &str = account_cache_dir.to_utf8()?;
+
+  // Pull the accounts, if any.
+  for (_, account) in context.config.account.iter() {
+    account.pull(context)?;
+  }
+
+  // Add the accounts to the validator.
+  cmd.arg("--account-dir").arg(account_cache_dir);
+
+  // Process the programs and add them to the validator.
+  for (_, program) in context.config.program.iter() {
+    let address: &str = &program.address;
+
+    // Pull the program, if any.
+    program.pull(context)?;
+
+    let cache_dir: &str = &context.program_cache_dir()?;
+    let cache_dir = Path::new(cache_dir);
+    let out_filename: &str = &format!("{address}.so");
+    let out_file = cache_dir.join(out_filename);
+
+    // If it doesn't exist, then skip.
+    if !out_file.exists() {
+      continue;
+    }
+
+    let out_file: &str = out_file.to_utf8()?;
+
+    // If the program has an authority, then use the upgradeable-program flag.
+    if let Some(authority) = &program.authority {
+      cmd
+        .arg("--upgradeable-program")
+        .arg(address)
+        .arg(out_file)
+        .arg(authority);
+    } else {
+      cmd.arg("--bpf-program").arg(address).arg(out_file);
+    }
+  }
+
+  if reset {
+    cmd.arg("--reset");
+  }
+
+  let mut cmd = cmd.spawn()?;
+
+  if context.verbose {
+    handle_tty_output!(cmd.stdout, context);
+  }
+  handle_tty_output!(cmd.stderr, context);
+
+  let status = cmd.wait()?;
+  if !status.success() {
+    anyhow::bail!("Failed to start validator");
+  }
+
+  Ok(())
+}
+
 #[cfg(test)]
 mod tests {
+  use std::sync::Arc;
+
+  use crate::schema::ConfigRoot;
+
   use super::*;
   use assert_fs::TempDir;
 
@@ -109,15 +219,17 @@ mod tests {
     let temp_dir = TempDir::new()?;
     let address = "AKEWE7Bgh87GPp171b4cJPSSZfmZwQ3KaqYqXoKLNAEE";
     let cache_dir = temp_dir.path();
+    let config = Arc::new(ConfigRoot::default());
     let rpc_endpoint = "https://eclipse.lgns.net/";
 
     let context = LumosContext::new(
+      config,
       rpc_endpoint,
       Some(cache_dir.to_str().context("Unable to unwrap cache dir")?.into()),
       false,
     );
 
-    clone_account(&context, address)?;
+    clone_account(&context, address, false)?;
 
     let out_filename: &str = &format!("{address}.json");
     let out_file = cache_dir.join("accounts").join(out_filename);
@@ -130,15 +242,17 @@ mod tests {
     let temp_dir = TempDir::new()?;
     let address = "br1xwubggTiEZ6b7iNZUwfA3psygFfaXGfZ1heaN9AW";
     let cache_dir = temp_dir.path();
+    let config = Arc::new(ConfigRoot::default());
     let rpc_endpoint = "https://eclipse.lgns.net/";
 
     let context = LumosContext::new(
+      config,
       rpc_endpoint,
       Some(cache_dir.to_str().context("Unable to unwrap cache dir")?.into()),
       false,
     );
 
-    clone_program(&context, address)?;
+    clone_program(&context, address, false)?;
 
     let out_filename: &str = &format!("{address}.so");
     let out_file = cache_dir.join("programs").join(out_filename);
