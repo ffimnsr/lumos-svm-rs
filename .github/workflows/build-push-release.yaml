@@ -16,7 +16,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Install Rust
-        uses: dtolnay/rust-toolchain@master
+        uses: dtolnay/rust-toolchain@nightly
         with:
           toolchain: nightly
           components: rustfmt
@@ -152,7 +152,7 @@ jobs:
           install: git perl pkg-config mingw-w64-x86_64-toolchain mingw-w64-ucrt-x86_64-gcc openssl
           path-type: inherit
       - name: Install Rust
-        uses: dtolnay/rust-toolchain@master
+        uses: dtolnay/rust-toolchain@nightly
         with:
           toolchain: ${{ matrix.rust }}
           target: ${{ matrix.target }}
@@ -242,7 +242,7 @@ jobs:
         run: |
           ci/ubuntu-install-packages
       - name: Install Rust
-        uses: dtolnay/rust-toolchain@master
+        uses: dtolnay/rust-toolchain@nightly
         with:
           toolchain: nightly
           target: ${{ env.TARGET }}
