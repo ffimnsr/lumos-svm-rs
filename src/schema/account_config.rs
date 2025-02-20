@@ -22,6 +22,7 @@ impl Pull for AccountConfig {
     clone_account(context, &self.address, update)
   }
 
+  /// Get the address of the account.
   fn address(&self) -> &str {
     &self.address
   }

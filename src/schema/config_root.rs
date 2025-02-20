@@ -24,6 +24,7 @@ pub struct ConfigRoot {
 
 /// Implementation of ConfigRoot.
 impl ConfigRoot {
+  /// Create a new ConfigRoot from a file.
   pub fn from_file(path: &str) -> anyhow::Result<Self> {
     let filepath = Path::new(path);
     if !filepath.exists() {

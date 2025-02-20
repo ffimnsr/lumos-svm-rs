@@ -23,6 +23,7 @@ pub struct LumosContext {
 
 /// Implementation of LumosContext.
 impl LumosContext {
+  /// Create a new LumosContext.
   pub fn new(config: Arc<ConfigRoot>, rpc_endpoint: &str, cache_dir: Option<String>, verbose: bool) -> Self {
     Self {
       config: config.clone(),
@@ -36,6 +37,7 @@ impl LumosContext {
     }
   }
 
+  /// Set the RPC endpoint.
   pub fn set_rpc_endpoint(&self, rpc_endpoint: String) -> anyhow::Result<()> {
     self
       .rpc_endpoint
@@ -44,6 +46,7 @@ impl LumosContext {
       .map_err(|_| anyhow::anyhow!("Failed to set rpc endpoint"))
   }
 
+  /// Get the RPC endpoint.
   pub fn rpc_endpoint(&self) -> String {
     self
       .rpc_endpoint
@@ -52,18 +55,22 @@ impl LumosContext {
       .unwrap_or_else(|_| "http://localhost:8899".into())
   }
 
+  /// Get the cache directory.
   pub fn cache_dir(&self) -> String {
     self.cache_dir.clone().unwrap_or(".lumos-cache".into())
   }
 
+  /// Get the program cache directory.
   pub fn program_cache_dir(&self) -> anyhow::Result<String> {
     self.cache_dir_join("programs")
   }
 
+  /// Get the account cache directory.
   pub fn account_cache_dir(&self) -> anyhow::Result<String> {
     self.cache_dir_join("accounts")
   }
 
+  /// Join the cache directory with a path.
   fn cache_dir_join(&self, p: &str) -> anyhow::Result<String> {
     let cache_dir = self.cache_dir();
     let path = Path::new(&cache_dir);

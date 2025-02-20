@@ -16,6 +16,7 @@ use crate::file::ToUtf8;
 use crate::lumos_context::LumosContext;
 use crate::traits::Pull as _;
 
+/// Clone an account.
 pub fn clone_account(context: &LumosContext, address: &str, update: bool) -> anyhow::Result<()> {
   let solana_cmd = which("solana").with_context(|| "Failed to find solana command")?;
 
@@ -69,6 +70,7 @@ pub fn clone_account(context: &LumosContext, address: &str, update: bool) -> any
   Ok(())
 }
 
+/// Clone a program.
 pub fn clone_program(context: &LumosContext, address: &str, update: bool) -> anyhow::Result<()> {
   let solana_cmd = which("solana").with_context(|| "Failed to find solana command")?;
 
@@ -120,6 +122,7 @@ pub fn clone_program(context: &LumosContext, address: &str, update: bool) -> any
   Ok(())
 }
 
+/// Start a validator.
 pub fn validator(context: &LumosContext, reset: bool) -> anyhow::Result<()> {
   let solana_test_validator_cmd =
     which("solana-test-validator").with_context(|| "Failed to find solana-test-validator command")?;

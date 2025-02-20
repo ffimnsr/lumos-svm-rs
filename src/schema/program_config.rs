@@ -18,11 +18,13 @@ pub struct ProgramConfig {
 }
 
 impl Pull for ProgramConfig {
+  /// Pull the program.
   fn pull(&self, context: &LumosContext) -> anyhow::Result<()> {
     let update = self.update.unwrap_or(false);
     clone_program(context, &self.address, update)
   }
 
+  /// Get the address of the program.
   fn address(&self) -> &str {
     &self.address
   }

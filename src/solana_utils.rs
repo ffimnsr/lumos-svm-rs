@@ -12,6 +12,7 @@ use solana_client::rpc_client::RpcClient;
 use solana_sdk::pubkey::Pubkey;
 use std::str::FromStr as _;
 
+/// Get the owners of the given addresses.
 pub async fn get_owners<T: AsRef<str>>(rpc_endpoint: &str, addresses: &[T]) -> anyhow::Result<Vec<String>> {
   let mut owners = Vec::with_capacity(addresses.len());
 
@@ -27,6 +28,7 @@ pub async fn get_owners<T: AsRef<str>>(rpc_endpoint: &str, addresses: &[T]) -> a
   Ok(owners)
 }
 
+/// Get the owner of the given address.
 pub async fn get_owner(rpc_endpoint: &str, address: &str) -> anyhow::Result<String> {
   let client = RpcClient::new(rpc_endpoint);
   let pubkey = Pubkey::from_str(address).map_err(|e| anyhow::anyhow!("Invalid address format: {}", e))?;
@@ -35,6 +37,7 @@ pub async fn get_owner(rpc_endpoint: &str, address: &str) -> anyhow::Result<Stri
   Ok(account.owner.to_string())
 }
 
+/// Get the token details of the given address.
 #[derive(Debug)]
 pub struct TokenDetails {
   pub owner: String,
@@ -48,6 +51,7 @@ pub struct TokenDetails {
   pub metadata: Option<TokenMetadata>,
 }
 
+/// Token metadata definition.
 #[derive(Debug)]
 pub struct TokenMetadata {
   pub authority: Option<String>,
@@ -58,6 +62,7 @@ pub struct TokenMetadata {
   pub uri: Option<String>,
 }
 
+/// Get the token details of the given address.
 pub async fn get_token_details(rpc_endpoint: &str, address: &str) -> anyhow::Result<TokenDetails> {
   let client = RpcClient::new(rpc_endpoint);
   let pubkey =
