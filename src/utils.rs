@@ -124,7 +124,7 @@ pub fn validator(context: &LumosContext, reset: bool) -> anyhow::Result<()> {
     which("solana-test-validator").with_context(|| "Failed to find solana-test-validator command")?;
 
   let stdout = get_tty_output!(context.verbose);
-  let stderr = get_tty_output!(context.verbose);
+  let stderr = Stdio::piped();
 
   let rpc_endpoint: &str = &context.rpc_endpoint();
   let ledger_dir: &str = &context
