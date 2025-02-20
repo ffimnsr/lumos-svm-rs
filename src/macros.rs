@@ -1,4 +1,3 @@
-
 #[macro_export]
 macro_rules! handle_tty_output {
   ($output:expr, $context:expr) => {

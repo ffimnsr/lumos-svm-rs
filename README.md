@@ -1,2 +1,4 @@
-# lumos-svm-rs
+# lumos-svm
+
 A simple SVM test validator.
+

@@ -3,7 +3,10 @@ use indicatif::{
   ProgressStyle,
 };
 use std::path::Path;
-use std::sync::{Arc, RwLock};
+use std::sync::{
+  Arc,
+  RwLock,
+};
 
 use crate::file::ToUtf8 as _;
 use crate::schema::ConfigRoot;
@@ -33,15 +36,17 @@ impl LumosContext {
     }
   }
 
-  pub fn set_rpc_endpoint(&self, rpc_endpoint: String)-> anyhow::Result<()> {
-    self.rpc_endpoint
+  pub fn set_rpc_endpoint(&self, rpc_endpoint: String) -> anyhow::Result<()> {
+    self
+      .rpc_endpoint
       .write()
       .map(|mut endpoint| *endpoint = rpc_endpoint)
       .map_err(|_| anyhow::anyhow!("Failed to set rpc endpoint"))
   }
 
   pub fn rpc_endpoint(&self) -> String {
-    self.rpc_endpoint
+    self
+      .rpc_endpoint
       .read()
       .map(|endpoint| endpoint.clone())
       .unwrap_or_else(|_| "http://localhost:8899".into())

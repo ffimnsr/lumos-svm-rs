@@ -1,19 +1,19 @@
 fn main() {
-    set_git_revision_hash();
+  set_git_revision_hash();
 }
 
 fn set_git_revision_hash() {
-    use std::process::Command;
+  use std::process::Command;
 
-    let args = &["rev-parse", "--short=10", "HEAD"];
-    let Ok(output) = Command::new("git").args(args).output() else {
-        return;
-    };
+  let args = &["rev-parse", "--short=10", "HEAD"];
+  let Ok(output) = Command::new("git").args(args).output() else {
+    return;
+  };
 
-    let rev = String::from_utf8_lossy(&output.stdout).trim().to_string();
-    if rev.is_empty() {
-        return;
-    }
+  let rev = String::from_utf8_lossy(&output.stdout).trim().to_string();
+  if rev.is_empty() {
+    return;
+  }
 
-    println!("cargo:rustc-env=LUMOS_SVM_BUILD_GIT_HASH={}", rev);
+  println!("cargo:rustc-env=LUMOS_SVM_BUILD_GIT_HASH={}", rev);
 }

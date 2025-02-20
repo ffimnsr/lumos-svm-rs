@@ -5,6 +5,6 @@ mod cli_entry;
 
 /// Main entry point
 fn main() -> anyhow::Result<()> {
-    let cli = CliEntry::new()?;
-    cli.run()
+  let cli = CliEntry::new()?;
+  cli.run()
 }

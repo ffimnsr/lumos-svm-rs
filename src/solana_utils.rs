@@ -29,8 +29,7 @@ pub async fn get_owners<T: AsRef<str>>(rpc_endpoint: &str, addresses: &[T]) -> a
 
 pub async fn get_owner(rpc_endpoint: &str, address: &str) -> anyhow::Result<String> {
   let client = RpcClient::new(rpc_endpoint);
-  let pubkey =
-    Pubkey::from_str(address).map_err(|e| anyhow::anyhow!("Invalid address format: {}", e))?;
+  let pubkey = Pubkey::from_str(address).map_err(|e| anyhow::anyhow!("Invalid address format: {}", e))?;
 
   let account = client.get_account(&pubkey)?;
   Ok(account.owner.to_string())

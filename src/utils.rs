@@ -4,6 +4,7 @@ use std::io::{
   BufRead as _,
   BufReader,
 };
+use std::net::TcpListener;
 use std::path::Path;
 use std::process::{
   Command,
@@ -133,6 +134,7 @@ pub fn validator(context: &LumosContext, reset: bool) -> anyhow::Result<()> {
     .ledger_dir
     .clone()
     .unwrap_or(".lumos-ledger".into());
+
   let mut cmd = Command::new(solana_test_validator_cmd);
   cmd
     .stdout(stdout)
@@ -141,6 +143,16 @@ pub fn validator(context: &LumosContext, reset: bool) -> anyhow::Result<()> {
     .arg(rpc_endpoint)
     .arg("--ledger")
     .arg(ledger_dir);
+
+  // Check if the rpc port is available, if not, then use a different port.
+  if !is_validator_port_available(8899) {
+    cmd.arg("--rpc-port").arg("8900");
+  }
+
+  // Check if faucet port is available, if not, then use a different port.
+  if !is_validator_port_available(9900) {
+    cmd.arg("--faucet-port").arg("9901");
+  }
 
   // Process the accounts
   let account_cache_dir: &str = &context.account_cache_dir()?;
@@ -203,6 +215,14 @@ pub fn validator(context: &LumosContext, reset: bool) -> anyhow::Result<()> {
   }
 
   Ok(())
+}
+
+/// Check if the validator port is available.
+/// Returns true if the port is available, false otherwise.
+/// # Arguments
+/// * `port` - The port to check.
+fn is_validator_port_available(port: u16) -> bool {
+  TcpListener::bind(("0.0.0.0", port)).is_ok()
 }
 
 #[cfg(test)]
