@@ -40,38 +40,38 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - build: stable
-            os: ubuntu-latest
-            rust: stable
-          - build: beta
-            os: ubuntu-latest
-            rust: beta
           - build: nightly
             os: ubuntu-latest
             rust: nightly
-          - build: stable-musl
+          - build: beta
             os: ubuntu-latest
-            rust: stable
+            rust: nightly
+          - build: nightly
+            os: ubuntu-latest
+            rust: nightly
+          - build: nightly-musl
+            os: ubuntu-latest
+            rust: nightly
             target: x86_64-unknown-linux-musl
-          - build: stable-x86
+          - build: nightly-x86
             os: ubuntu-latest
-            rust: stable
+            rust: nightly
             target: i686-unknown-linux-gnu
-          - build: stable-aarch64
+          - build: nightly-aarch64
             os: ubuntu-latest
-            rust: stable
+            rust: nightly
             target: aarch64-unknown-linux-gnu
-          - build: stable-powerpc64
+          - build: nightly-powerpc64
             os: ubuntu-latest
-            rust: stable
+            rust: nightly
             target: powerpc64-unknown-linux-gnu
-          - build: stable-s390x
+          - build: nightly-s390x
             os: ubuntu-latest
-            rust: stable
+            rust: nightly
             target: s390x-unknown-linux-gnu
           - build: macos
             os: macos-latest
-            rust: stable
+            rust: nightly
           - build: win-msvc
             os: windows-latest
             rust: nightly
@@ -154,6 +154,6 @@ jobs:
       - name: Install Rust
         uses: dtolnay/rust-toolchain@master
         with:
-          toolchain: stable
+          toolchain: nightly
           components: clippy, rustc-dev
       - run: cargo clippy --all-features --all-targets --tests --benches -- -Dclippy::all

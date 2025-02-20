@@ -18,7 +18,7 @@ jobs:
       - name: Install Rust
         uses: dtolnay/rust-toolchain@master
         with:
-          toolchain: stable
+          toolchain: nightly
           components: rustfmt
       - name: Run cargo check tool
         run: cargo check --verbose
@@ -62,63 +62,63 @@ jobs:
     strategy:
       matrix:
         build:
-          - stable-musl
-          - stable-x86-gnu
-          - stable-arm-gnueabihf
-          - stable-armv7-gnueabihf
-          - stable-armv7-musleabihf
-          - stable-armv7-musleabi
-          - stable-aarch64
-          - stable-powerpc64
-          - stable-s390x
+          - nightly-musl
+          - nightly-x86-gnu
+          - nightly-arm-gnueabihf
+          - nightly-armv7-gnueabihf
+          - nightly-armv7-musleabihf
+          - nightly-armv7-musleabi
+          - nightly-aarch64
+          - nightly-powerpc64
+          - nightly-s390x
           - macos
           - win-msvc
           - win-gnu
           - win32-msvc
         include:
-          - build: stable-musl
+          - build: nightly-musl
             os: ubuntu-latest
-            rust: stable
+            rust: nightly
             target: x86_64-unknown-linux-musl
             strip: x86_64-linux-musl-strip
-          - build: stable-x86-gnu
+          - build: nightly-x86-gnu
             os: ubuntu-latest
-            rust: stable
+            rust: nightly
             target: i686-unknown-linux-gnu
             strip: x86_64-linux-gnu-strip
-          - build: stable-arm-gnueabihf
+          - build: nightly-arm-gnueabihf
             os: ubuntu-latest
-            rust: stable
+            rust: nightly
             target: arm-unknown-linux-gnueabihf
             strip: arm-linux-gnueabihf-strip
-          - build: stable-armv7-gnueabihf
+          - build: nightly-armv7-gnueabihf
             os: ubuntu-latest
-            rust: stable
+            rust: nightly
             target: armv7-unknown-linux-gnueabihf
             strip: arm-linux-gnueabihf-strip
-          - build: stable-armv7-musleabihf
+          - build: nightly-armv7-musleabihf
             os: ubuntu-latest
-            rust: stable
+            rust: nightly
             target: armv7-unknown-linux-musleabihf
             strip: arm-linux-musleabihf-strip
-          - build: stable-armv7-musleabi
+          - build: nightly-armv7-musleabi
             os: ubuntu-latest
-            rust: stable
+            rust: nightly
             target: armv7-unknown-linux-musleabi
             strip: arm-linux-musleabi-strip
-          - build: stable-aarch64
+          - build: nightly-aarch64
             os: ubuntu-latest
-            rust: stable
+            rust: nightly
             target: aarch64-unknown-linux-gnu
             strip: aarch64-linux-gnu-strip
-          - build: stable-powerpc64
+          - build: nightly-powerpc64
             os: ubuntu-latest
-            rust: stable
+            rust: nightly
             target: powerpc64-unknown-linux-gnu
             strip: powerpc64-linux-gnu-strip
-          - build: stable-s390x
+          - build: nightly-s390x
             os: ubuntu-latest
-            rust: stable
+            rust: nightly
             target: s390x-unknown-linux-gnu
             strip: s390x-linux-gnu-strip
           - build: macos
