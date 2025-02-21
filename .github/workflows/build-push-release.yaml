@@ -62,95 +62,24 @@ jobs:
     strategy:
       matrix:
         build:
-          - nightly-musl
           - nightly-x86-gnu
-          - nightly-arm-gnueabihf
-          - nightly-armv7-gnueabihf
-          - nightly-armv7-musleabihf
-          - nightly-armv7-musleabi
-          - nightly-aarch64
-          - nightly-powerpc64
-          - nightly-s390x
           - macos
-          - win-msvc
-          - win-gnu
-          - win32-msvc
         include:
-          - build: nightly-musl
-            os: ubuntu-latest
-            rust: nightly
-            target: x86_64-unknown-linux-musl
-            strip: x86_64-linux-musl-strip
           - build: nightly-x86-gnu
             os: ubuntu-latest
             rust: nightly
             target: i686-unknown-linux-gnu
             strip: x86_64-linux-gnu-strip
-          - build: nightly-arm-gnueabihf
-            os: ubuntu-latest
-            rust: nightly
-            target: arm-unknown-linux-gnueabihf
-            strip: arm-linux-gnueabihf-strip
-          - build: nightly-armv7-gnueabihf
-            os: ubuntu-latest
-            rust: nightly
-            target: armv7-unknown-linux-gnueabihf
-            strip: arm-linux-gnueabihf-strip
-          - build: nightly-armv7-musleabihf
-            os: ubuntu-latest
-            rust: nightly
-            target: armv7-unknown-linux-musleabihf
-            strip: arm-linux-musleabihf-strip
-          - build: nightly-armv7-musleabi
-            os: ubuntu-latest
-            rust: nightly
-            target: armv7-unknown-linux-musleabi
-            strip: arm-linux-musleabi-strip
-          - build: nightly-aarch64
-            os: ubuntu-latest
-            rust: nightly
-            target: aarch64-unknown-linux-gnu
-            strip: aarch64-linux-gnu-strip
-          - build: nightly-powerpc64
-            os: ubuntu-latest
-            rust: nightly
-            target: powerpc64-unknown-linux-gnu
-            strip: powerpc64-linux-gnu-strip
-          - build: nightly-s390x
-            os: ubuntu-latest
-            rust: nightly
-            target: s390x-unknown-linux-gnu
-            strip: s390x-linux-gnu-strip
           - build: macos
             os: macos-latest
             rust: nightly
             target: x86_64-apple-darwin
-          - build: win-msvc
-            os: windows-latest
-            rust: nightly
-            target: x86_64-pc-windows-msvc
-          - build: win-gnu
-            os: windows-latest
-            rust: nightly-x86_64-gnu
-            target: x86_64-pc-windows-gnu
-          - build: win32-msvc
-            os: windows-latest
-            rust: nightly
-            target: i686-pc-windows-msvc
     steps:
       - uses: actions/checkout@v4
       - name: Install packages (Ubuntu)
         if: matrix.os == 'ubuntu-latest'
         run: |
           ci/ubuntu-install-packages
-      - name: Install packages (Windows GNU)
-        uses: msys2/setup-msys2@v2
-        if: matrix.os == 'windows-latest' && matrix.target == 'x86_64-pc-windows-gnu'
-        with:
-          msystem: UCRT64
-          update: true
-          install: git perl pkg-config mingw-w64-x86_64-toolchain mingw-w64-ucrt-x86_64-gcc openssl
-          path-type: inherit
       - name: Install Rust
         uses: dtolnay/rust-toolchain@master
         with:
@@ -182,10 +111,6 @@ jobs:
         run: ${{ env.CARGO }} build --verbose --release ${{ env.TARGET_FLAGS }}
       - name: Build release binary and dependency crates (cross)
         if: matrix.target != 'x86_64-pc-windows-gnu'
-        run: ${{ env.CARGO }} build --verbose --release ${{ env.TARGET_FLAGS }}
-      - name: Build release binary and dependency crates (win-gnu)
-        if: matrix.target == 'x86_64-pc-windows-gnu'
-        shell: msys2 {0}
         run: ${{ env.CARGO }} build --verbose --release ${{ env.TARGET_FLAGS }}
       - name: Strip release binary (linux, macos and macos-arm)
         if: matrix.os == 'macos'
@@ -226,103 +151,3 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         shell: bash
         run: gh release upload ${{ needs.create-release.outputs.lumos_version }} ${{ env.ASSET }} ${{ env.ASSET_SUM }}
-  build-release-deb:
-    runs-on: ubuntu-latest
-    needs:
-      - create-release
-    env:
-      CARGO: cargo
-      TARGET: x86_64-unknown-linux-musl
-      TARGET_FLAGS: ""
-      TARGET_DIR: ./target
-      RUST_BACKTRACE: 1
-    steps:
-      - uses: actions/checkout@v4
-      - name: Install packages (Ubuntu)
-        run: |
-          ci/ubuntu-install-packages
-      - name: Install Rust
-        uses: dtolnay/rust-toolchain@master
-        with:
-          toolchain: nightly
-          target: ${{ env.TARGET }}
-      - name: Install cargo-deb
-        shell: bash
-        run: cargo install cargo-deb
-      - name: Show command used for Cargo
-        run: |
-          echo "cargo command is: ${{ env.CARGO }}"
-          echo "target flag is: ${{ env.TARGET_FLAGS }}"
-          echo "target dir is: ${{ env.TARGET_DIR }}"
-      - name: Build release binary
-        run: ${{ env.CARGO }} build --verbose --release --target ${{ env.TARGET }} ${{ env.TARGET_FLAGS }}
-      - name: Build deb package
-        run: ${{ env.CARGO }} deb --target ${{ env.TARGET }}
-      - name: Build archive
-        shell: bash
-        run: |
-          deb_target="lumos_svm_${{ needs.create-release.outputs.lumos_version }}-1_amd64.deb"
-          mv "target/${{ env.TARGET }}/debian/$deb_target" .
-          shasum -a 256 "$deb_target" > "$deb_target.sha256"
-          echo "ASSET=$deb_target" >> $GITHUB_ENV
-          echo "ASSET_SUM=$deb_target.sha256" >> $GITHUB_ENV
-      - name: Upload release archive
-        env:
-          GH_TOKEN: ${{ github.token }}
-        shell: bash
-        run: gh release upload ${{ needs.create-release.outputs.lumos_version }} ${{ env.ASSET }} ${{ env.ASSET_SUM }}
-  build-release-image:
-    runs-on: ubuntu-latest
-    needs:
-      - create-release
-    env:
-      REGISTRY: ghcr.io
-      IMAGE_NAME: ${{ github.repository }}
-    permissions:
-      contents: read
-      packages: write
-      id-token: write
-    steps:
-      - uses: actions/checkout@v4
-      - name: Install cosign
-        if: github.event_name != 'pull_request'
-        uses: sigstore/cosign-installer@v3.6.0
-        with:
-          cosign-release: 'v2.4.0'
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-      - name: Log into registry ${{ env.REGISTRY }}
-        if: github.event_name != 'pull_request'
-        uses: docker/login-action@v3
-        with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Extract Docker metadata
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-          tags: |
-            type=raw,value=latest
-            type=semver,pattern={{version}},value=${{ env.LUMOS_VERSION }}
-            type=semver,pattern={{major}}.{{minor}},value=${{ env.LUMOS_VERSION }}
-            type=semver,pattern={{major}},value=${{ env.LUMOS_VERSION }}
-      - name: Build and push Docker image
-        id: build-and-push
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          file: ./Containerfile
-          platforms: linux/amd64
-          push: ${{ github.event_name != 'pull_request' }}
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-      - name: Sign the published Docker image
-        if: ${{ github.event_name != 'pull_request' }}
-        env:
-          TAGS: ${{ steps.meta.outputs.tags }}
-          DIGEST: ${{ steps.build-and-push.outputs.digest }}
-        run: echo "${TAGS}" | xargs -I {} cosign sign --yes {}@${DIGEST}
