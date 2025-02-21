@@ -1,6 +1,6 @@
-# Lumos SVM
+# Lumos SVM 🚀
 
-A simple SVM test validator.
+A Solana Test Validator Manager (SVM) that simplifies local development and testing of Solana programs.
 
 ## Features
 
@@ -48,8 +48,8 @@ lumos-svm start
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/lumos-svm
-cd lumos-svm
+git clone https://github.com/ffimnsr/lumos-svm-rs
+cd lumos-svm-rs
 
 # Build
 cargo build
@@ -61,8 +61,7 @@ cargo test
 ## Requirements
 
 - Rust 1.70+
-- Solana CLI tools
-- `solana-test-validator`
+- Solana CLI tools with `solana-test-validator`
 
 ## Contributing
 
@@ -70,4 +69,4 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the Apache and MIT License - see the [COPYING](COPYING) file for details.
