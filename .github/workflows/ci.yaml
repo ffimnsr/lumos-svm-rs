@@ -20,7 +20,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Install Rust
-        uses: dtolnay/rust-toolchain@nightly
+        uses: dtolnay/rust-toolchain@master
         with:
           toolchain: nightly
           components: rustc-dev
@@ -95,10 +95,15 @@ jobs:
           install: git perl pkg-config mingw-w64-x86_64-toolchain mingw-w64-ucrt-x86_64-gcc openssl
           path-type: inherit
       - name: Install Rust
-        uses: dtolnay/rust-toolchain@nightly
+        uses: dtolnay/rust-toolchain@master
         with:
           toolchain: ${{ matrix.rust }}
           components: llvm-tools, rustc-dev
+      - name: Install solana-cli tools
+        run: |
+          sh -c "$(curl -sSfL https://release.anza.xyz/stable/install)"
+          echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
+          solana --version
       - name: Use cross compiler
         if: matrix.os == 'ubuntu-latest' && matrix.target != ''
         run: |
@@ -141,7 +146,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Install Rust
-        uses: dtolnay/rust-toolchain@nightly
+        uses: dtolnay/rust-toolchain@master
         with:
           toolchain: nightly
           components: rustfmt
@@ -152,7 +157,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Install Rust
-        uses: dtolnay/rust-toolchain@nightly
+        uses: dtolnay/rust-toolchain@master
         with:
           toolchain: nightly
           components: clippy, rustc-dev
