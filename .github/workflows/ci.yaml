@@ -103,7 +103,9 @@ jobs:
         run: |
           sh -c "$(curl -sSfL https://release.anza.xyz/stable/install)"
           echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
-          solana --version
+          rehash
+      - name: Check solana version
+        run: solana --version
       - name: Use cross compiler
         if: matrix.os == 'ubuntu-latest' && matrix.target != ''
         run: |
