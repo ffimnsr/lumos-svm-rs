@@ -55,6 +55,11 @@ impl LumosContext {
       .unwrap_or_else(|_| "http://localhost:8899".into())
   }
 
+  /// Get the mint authority.
+  pub fn mint_authority(&self) -> Option<String> {
+    self.config.general.mint_authority.clone()
+  }
+
   /// Get the cache directory.
   pub fn cache_dir(&self) -> String {
     self.cache_dir.clone().unwrap_or(".lumos-cache".into())

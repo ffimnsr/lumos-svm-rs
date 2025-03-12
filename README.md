@@ -38,6 +38,29 @@ address = "whirLbMiicVdio4qvUfM5KAg6Ct8VwpYzGff3uctyCc"
 lumos-svm start
 ```
 
+## Advanced Features
+
+### Modify Token Mint Authority
+
+You can modify the mint authority for cloned token accounts:
+
+```toml
+[general]
+rpc_endpoint = "https://eclipse.lgns.net/"
+mint_authority = "<YOUR-PUBLIC-KEY>"
+
+[account.usdc]
+address = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"
+mint = true  # Set this token as mintable
+update = true  # Update if previously cloned
+```
+
+This configuration:
+
+- Sets your public key as the mint authority
+- Makes the USDC token mintable locally
+- Updates existing cloned accounts when specified
+
 ## Commands
 
 - `lumos-svm run`: Start the test validator

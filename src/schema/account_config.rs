@@ -12,6 +12,9 @@ pub struct AccountConfig {
 
   /// Check if the account should be updated.
   pub update: Option<bool>,
+
+  /// Check if account can be modify for minting.
+  pub mint: Option<bool>,
 }
 
 /// An implementation of the account configuration.
@@ -19,7 +22,8 @@ impl Pull for AccountConfig {
   /// Pulls the account configuration.
   fn pull(&self, context: &LumosContext) -> anyhow::Result<()> {
     let update = self.update.unwrap_or(false);
-    clone_account(context, &self.address, update)
+    let mint = self.mint.unwrap_or(false);
+    clone_account(context, &self.address, update, mint)
   }
 
   /// Get the address of the account.

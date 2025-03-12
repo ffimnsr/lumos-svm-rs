@@ -11,4 +11,9 @@ pub struct GeneralConfig {
 
   /// Validator ledger directory.
   pub ledger_dir: Option<String>,
+
+  /// The mint authority.
+  /// This is the public key of the mint authority that will
+  /// be use to override the tokens mint authority.
+  pub mint_authority: Option<String>,
 }

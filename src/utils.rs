@@ -1,4 +1,9 @@
 use anyhow::Context;
+use base64::prelude::*;
+use serde::{
+  Deserialize,
+  Serialize,
+};
 use std::fs;
 use std::io::{
   BufRead as _,
@@ -16,9 +21,30 @@ use crate::file::ToUtf8;
 use crate::lumos_context::LumosContext;
 use crate::traits::Pull as _;
 
+#[derive(Debug, Deserialize, Serialize)]
+struct AccountDataRoot {
+  pub pubkey: String,
+  pub account: AccountData,
+}
+
+#[derive(Debug, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
+struct AccountData {
+  pub lamports: i64,
+  pub data: Vec<String>,
+  pub owner: String,
+  pub executable: bool,
+  pub rent_epoch: i64,
+  pub space: i64,
+}
+
 /// Clone an account.
-pub fn clone_account(context: &LumosContext, address: &str, update: bool) -> anyhow::Result<()> {
+pub fn clone_account(context: &LumosContext, address: &str, update: bool, mint: bool) -> anyhow::Result<()> {
   let solana_cmd = which("solana").with_context(|| "Failed to find solana command")?;
+
+  if !is_valid_solana_address(address) {
+    anyhow::bail!("Invalid Solana address: {}", address);
+  }
 
   let stdout = get_tty_output!(context.verbose);
   let stderr = Stdio::piped();
@@ -67,12 +93,76 @@ pub fn clone_account(context: &LumosContext, address: &str, update: bool) -> any
     anyhow::bail!("Failed to clone account: {address}");
   }
 
+  // If mint is true, then modify the mint account.
+  if mint {
+    let pb = context.pb.clone();
+
+    // Open the account file, modify it to be a mint account, and write it back
+    let account_data = fs::read_to_string(out_file)?;
+    let mut account_json: AccountDataRoot = serde_json::from_str(&account_data)
+      .with_context(|| format!("Failed to parse account JSON for {}", address))?;
+
+    // Get the base64 data from the account
+    if account_json.account.data.is_empty() {
+      anyhow::bail!("Account data is empty for mint: {}", address);
+    }
+
+    // Decode the base64 data
+    let data_str = &account_json.account.data[0];
+    let mut data = BASE64_STANDARD
+      .decode(data_str)
+      .with_context(|| format!("Failed to decode base64 data for mint: {}", address))?;
+
+    // Log the original authority
+    if context.verbose && data.len() >= 36 {
+      let msg = format!("Original authority: {}", bs58::encode(&data[4..36]).into_string());
+      let _ = pb.println(msg);
+    }
+
+    // Replace the mint authority (bytes 4-36) with a new authority
+    // For this example, we'll use the context's wallet address or a default
+    let authority: &str = &context
+      .mint_authority()
+      .with_context(|| "Mint authority is not set in the `general` configuration")?;
+
+    if !is_valid_solana_address(authority) {
+      anyhow::bail!("Invalid mint authority address: {}", authority);
+    }
+
+    let authority_bytes = bs58::decode(authority)
+      .into_vec()
+      .with_context(|| format!("Failed to decode authority address: {}", authority))?;
+
+    // Ensure we have enough data and replace the authority bytes
+    if data.len() >= 36 && authority_bytes.len() == 32 {
+      data[4..36].copy_from_slice(&authority_bytes);
+    } else {
+      anyhow::bail!("Invalid data length or authority bytes for mint: {}", address);
+    }
+
+    // Log the new authority
+    if context.verbose {
+      let msg = format!("New authority: {}", bs58::encode(&data[4..36]).into_string());
+      let _ = pb.println(msg);
+    }
+
+    // Update the account data with the modified bytes
+    account_json.account.data[0] = BASE64_STANDARD.encode(&data);
+
+    // Write the modified JSON back to the file
+    fs::write(out_file, serde_json::to_string_pretty(&account_json)?)?;
+  }
+
   Ok(())
 }
 
 /// Clone a program.
 pub fn clone_program(context: &LumosContext, address: &str, update: bool) -> anyhow::Result<()> {
   let solana_cmd = which("solana").with_context(|| "Failed to find solana command")?;
+
+  if !is_valid_solana_address(address) {
+    anyhow::bail!("Invalid Solana address: {}", address);
+  }
 
   let stdout = get_tty_output!(context.verbose);
   let stderr = Stdio::piped();
@@ -228,6 +318,20 @@ fn is_validator_port_available(port: u16) -> bool {
   TcpListener::bind(("0.0.0.0", port)).is_ok()
 }
 
+/// Checks if a string is a valid Solana address.
+/// A valid Solana address is a Base58-encoded string that decodes to exactly 32 bytes.
+fn is_valid_solana_address(address: &str) -> bool {
+  if address.is_empty() {
+    return false;
+  }
+
+  // Try to decode the Base58 string
+  match bs58::decode(address).into_vec() {
+    Ok(bytes) => bytes.len() == 32, // Solana addresses should be 32 bytes
+    Err(_) => false,
+  }
+}
+
 #[cfg(test)]
 mod tests {
   use std::sync::Arc;
@@ -252,7 +356,7 @@ mod tests {
       false,
     );
 
-    clone_account(&context, address, false)?;
+    clone_account(&context, address, false, false)?;
 
     let out_filename: &str = &format!("{address}.json");
     let out_file = cache_dir.join("accounts").join(out_filename);

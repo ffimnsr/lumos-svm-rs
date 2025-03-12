@@ -6,6 +6,8 @@ address = "GU7NS9xCwgNPiAdJ69iusFrRfawjDDPjeMBovhV1d4kn"
 
 [account.usdc]
 address = "AKEWE7Bgh87GPp171b4cJPSSZfmZwQ3KaqYqXoKLNAEE"
+update = true
+mint = true
 
 [account.usdt]
 address = "CEBP3CqAbW4zdZA57H2wfaSG1QNdzQ72GiQEbQXyW9Tm"
