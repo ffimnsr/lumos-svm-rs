@@ -1,4 +1,5 @@
 pub mod file;
+pub mod idl_utils;
 pub mod lumos_context;
 
 #[macro_use]

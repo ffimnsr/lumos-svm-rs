@@ -1,5 +1,6 @@
 [general]
 rpc_endpoint = "https://eclipse.lgns.net/"
+mint_authority = "8vTM2FwzXT8bwT5jXyv556eo6LdPPPCnhynaCZcW2zRa"
 
 [account.teth]
 address = "GU7NS9xCwgNPiAdJ69iusFrRfawjDDPjeMBovhV1d4kn"
